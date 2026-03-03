@@ -1,0 +1,20 @@
+[
+    {
+        "name":"Hoa Hồng",
+        "price":620000,
+        "nume":15,
+        "image":"https://caybamien.vn/wp-content/uploads/2021/09/hong-vang-dep.jpg"
+    },
+    {
+        "name":"Hoa Giấy",
+        "price":2000000,
+        "nume":21,
+        "image":"https://sendasaigon.com/wp-content/uploads/2021/10/y-nghia-cay-hoa-giay.jpg"
+    },
+    {
+        "name":"Sen Đá",
+        "price":30000,
+        "nume":56,
+        "image":"https://lcglobal.vn/wp-content/uploads/2025/09/Sen-da.png"
+    }
+]
