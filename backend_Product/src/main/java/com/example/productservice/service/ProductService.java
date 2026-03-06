@@ -46,7 +46,7 @@ public class ProductService {
         
 
         // 🔹 Gọi sang Order Service
-        String orderServiceUrl = "http://localhost:3003/api/purchase/create-order";
+        String orderServiceUrl = "http://backend_order:3003/api/purchase/create-order";
 
         Map<String, Object> body = new HashMap<>();
         body.put("userID", item.getUserID());   // nhớ BuyItemRequest phải có userID

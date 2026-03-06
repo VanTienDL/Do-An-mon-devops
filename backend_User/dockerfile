@@ -1,0 +1,20 @@
+# Dùng NodeJS bản nhẹ
+FROM node:20-alpine
+
+# Thư mục làm việc trong container
+WORKDIR /app
+
+# Copy file package trước để cache dependency
+COPY package*.json ./
+
+# Cài dependency
+RUN npm install
+
+# Copy toàn bộ source code
+COPY . .
+
+# Mở port của service
+EXPOSE 3001
+
+# Chạy server
+CMD ["node", "server.js"]

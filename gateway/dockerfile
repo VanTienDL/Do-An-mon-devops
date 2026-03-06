@@ -1,0 +1,20 @@
+# Base image
+FROM node:20-alpine
+
+# Tạo thư mục trong container
+WORKDIR /app
+
+# Copy package trước để cache dependency
+COPY package*.json ./
+
+# Install dependency
+RUN npm install
+
+# Copy toàn bộ source
+COPY . .
+
+# Expose port gateway
+EXPOSE 3000
+
+# Start server
+CMD ["node", "server.js"]
