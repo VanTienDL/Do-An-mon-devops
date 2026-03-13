@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: user
-        image: 
+        image: catarena/backend-user:latest 
         ports:
         - containerPort: 3001
 ---

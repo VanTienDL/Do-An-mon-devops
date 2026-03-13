@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: product
-        image: 
+        image: catarena/backend-product:latest 
         ports:
         - containerPort: 3002
 ---

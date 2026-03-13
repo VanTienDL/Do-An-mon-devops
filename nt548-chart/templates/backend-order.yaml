@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: order
-        image: 
+        image: catarena/backend-order:latest 
         ports:
         - containerPort: 3003
 ---
