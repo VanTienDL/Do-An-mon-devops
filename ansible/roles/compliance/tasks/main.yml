@@ -1,0 +1,57 @@
+---
+- name: Install Trivy
+  ansible.builtin.shell: |
+    set -e
+    wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+    echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" | sudo tee /etc/apt/sources.list.d/trivy.list > /dev/null
+    sudo apt-get update
+    sudo apt-get install trivy -y
+  args:
+    creates: /usr/bin/trivy
+
+
+- name: Install pipx for Checkov
+  become: true
+  ansible.builtin.apt:
+    name: pipx
+    state: present
+    update_cache: true
+
+- name: Ensure pipx path is available
+  become: true
+  ansible.builtin.command: pipx ensurepath
+  changed_when: false
+
+- name: Install Checkov via pipx
+  become: true
+  ansible.builtin.command: pipx install checkov
+  args:
+    creates: /root/.local/bin/checkov
+
+- name: Get latest Conftest version
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/open-policy-agent/conftest/releases/latest
+    return_content: yes
+  register: conftest_latest
+
+- name: Set Conftest version fact
+  ansible.builtin.set_fact:
+    conftest_version: "{{ conftest_latest.json.tag_name | regex_replace('^v', '') }}"
+
+- name: Download and Install Conftest
+  ansible.builtin.shell: |
+    set -e
+    ARCH=x86_64
+    OS=Linux
+    curl -sL "https://github.com/open-policy-agent/conftest/releases/download/v{{ conftest_version }}/conftest_{{ conftest_version }}_${OS}_${ARCH}.tar.gz" | tar xz -C /tmp
+    mv /tmp/conftest /usr/local/bin/conftest
+    chmod +x /usr/local/bin/conftest
+  args:
+    creates: /usr/local/bin/conftest
+- name: Install tfsec
+  ansible.builtin.shell: |
+    set -e
+    curl -sL "https://github.com/aquasecurity/tfsec/releases/latest/download/tfsec-linux-amd64" -o /usr/local/bin/tfsec
+    chmod +x /usr/local/bin/tfsec
+  args:
+    creates: /usr/local/bin/tfsec

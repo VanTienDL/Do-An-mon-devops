@@ -1,0 +1,44 @@
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install base utilities
+  ansible.builtin.apt:
+    name:
+      - curl
+      - wget
+      - git
+      - unzip
+      - vim
+      - htop
+      - net-tools
+      - ca-certificates
+    state: present
+
+# AWS CLI v2 (official installer)
+- name: Download AWS CLI v2
+  ansible.builtin.get_url:
+    url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+    dest: "/tmp/awscliv2.zip"
+    mode: "0644"
+
+- name: Unzip AWS CLI v2 installer
+  ansible.builtin.unarchive:
+    src: "/tmp/awscliv2.zip"
+    dest: "/tmp"
+    remote_src: yes
+
+- name: Install/Update AWS CLI v2
+  ansible.builtin.command: /tmp/aws/install --update
+  register: awscli_install
+  changed_when: awscli_install.rc == 0
+
+- name: Verify AWS CLI
+  ansible.builtin.command: aws --version
+  register: aws_ver
+  changed_when: false
+
+- name: Show AWS CLI version
+  ansible.builtin.debug:
+    var: aws_ver.stdout
