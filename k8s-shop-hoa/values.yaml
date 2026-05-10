@@ -1,0 +1,55 @@
+# Thông tin chung cho toàn bộ dự án MicroFlower
+replicaCount: 1
+
+# Cấu hình danh sách các Microservices
+services:
+  - name: backend-user
+    image: phuongdinh157/backend-user # Nhớ đổi thành tên image thật trên Docker Hub của cậu
+    tag: latest
+    port: 3001
+    env:
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      DB_NAME: "userdb"
+      DB_HOST: "postgres-db" # Trỏ vào service name của Postgres trong K8s
+      DB_PORT: "5432"
+
+  - name: backend-product
+    image: phuongdinh157/backend-product
+    tag: latest
+    port: 3002
+    env:
+      DB_HOST: "postgres-db"
+      DB_PORT: "5432"
+      DB_NAME: "productdb"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+
+  - name: backend-order
+    image: phuongdinh157/backend-order
+    tag: latest
+    port: 3003
+    env:
+      DB_HOST: "postgres-db"
+      DB_PORT: "5432"
+      DB_NAME: "orderdb"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+
+  - name: api-gateway
+    image: phuongdinh157/api-gateway
+    tag: latest
+    port: 3000
+    env:
+      # Nếu gateway cần gọi các service khác, hãy dùng DNS của K8s
+      USER_SERVICE: "http://backend-user:3001"
+      PRODUCT_SERVICE: "http://backend-product:3002"
+      ORDER_SERVICE: "http://backend-order:3003"
+
+# Cấu hình Database (Postgres)
+postgres:
+  image: postgres:16
+  port: 5432
+  user: postgres
+  password: postgres
+  db: userdb
