@@ -1,0 +1,7 @@
+---
+- name: Setup Management Host (Bastion)
+  hosts: mgmt_host
+  roles:
+    - common
+    - k8s_tools
+    - compliance

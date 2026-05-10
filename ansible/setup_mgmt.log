@@ -1,0 +1,59 @@
+
+PLAY [Setup Management Host (Bastion)] *****************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [bastion]
+
+TASK [common : Update apt cache] ***********************************************
+ok: [bastion]
+
+TASK [common : Install base utilities] *****************************************
+ok: [bastion]
+
+TASK [common : Ensure snapd is running] ****************************************
+ok: [bastion]
+
+TASK [common : Check if AWS CLI already exists] ********************************
+ok: [bastion]
+
+TASK [common : Install awscli via apt when available] **************************
+skipping: [bastion]
+
+TASK [common : Install AWS CLI v2 bundle (fallback)] ***************************
+skipping: [bastion]
+
+TASK [common : Install kubectl via snap] ***************************************
+ok: [bastion]
+
+TASK [common : Install helm via snap] ******************************************
+ok: [bastion]
+
+TASK [common : Install eksctl] *************************************************
+ok: [bastion]
+
+TASK [k8s_tools : Update apt cache] ********************************************
+ok: [bastion]
+
+TASK [k8s_tools : Install base utilities] **************************************
+ok: [bastion]
+
+TASK [k8s_tools : Download AWS CLI v2] *****************************************
+ok: [bastion]
+
+TASK [k8s_tools : Unzip AWS CLI v2 installer] **********************************
+ok: [bastion]
+
+TASK [k8s_tools : Install/Update AWS CLI v2] ***********************************
+changed: [bastion]
+
+TASK [k8s_tools : Verify AWS CLI] **********************************************
+ok: [bastion]
+
+TASK [k8s_tools : Show AWS CLI version] ****************************************
+ok: [bastion] => {
+    "aws_ver.stdout": "aws-cli/2.34.7 Python/3.13.11 Linux/6.14.0-1018-aws exe/x86_64.ubuntu.24"
+}
+
+PLAY RECAP *********************************************************************
+bastion                    : ok=15   changed=1    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
+

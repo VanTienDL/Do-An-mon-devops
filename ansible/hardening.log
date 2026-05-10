@@ -1,0 +1,57 @@
+
+PLAY [Server hardening] ********************************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [bastion]
+
+TASK [security : Ensure openssh-server present] ********************************
+ok: [bastion]
+
+TASK [security : Disable root SSH login] ***************************************
+changed: [bastion]
+
+TASK [security : Disable password authentication] ******************************
+changed: [bastion]
+
+TASK [security : Disable X11 forwarding] ***************************************
+changed: [bastion]
+
+TASK [security : Restart SSH service] ******************************************
+changed: [bastion]
+
+TASK [security : Install unattended-upgrades] **********************************
+ok: [bastion]
+
+TASK [security : Enable unattended-upgrades] ***********************************
+ok: [bastion]
+
+TASK [security : Install fail2ban] *********************************************
+changed: [bastion]
+
+TASK [security : Enable and start fail2ban] ************************************
+ok: [bastion]
+
+TASK [monitoring : Create node_exporter user] **********************************
+changed: [bastion]
+
+TASK [monitoring : Download node_exporter] *************************************
+changed: [bastion]
+
+TASK [monitoring : Extract node_exporter] **************************************
+changed: [bastion]
+
+TASK [monitoring : Install node_exporter binary] *******************************
+changed: [bastion]
+
+TASK [monitoring : Create systemd service for node_exporter] *******************
+changed: [bastion]
+
+TASK [monitoring : Reload systemd] *********************************************
+ok: [bastion]
+
+TASK [monitoring : Enable & start node_exporter] *******************************
+changed: [bastion]
+
+PLAY RECAP *********************************************************************
+bastion                    : ok=17   changed=11   unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+

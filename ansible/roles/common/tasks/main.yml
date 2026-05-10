@@ -1,0 +1,47 @@
+---
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install base utilities
+  ansible.builtin.apt:
+    name:
+      - curl
+      - unzip
+      - git
+      - vim
+      - htop
+      - jq
+      - python3-pip
+      - snapd
+    state: present
+
+- name: Ensure snapd is running
+  ansible.builtin.service:
+    name: snapd
+    state: started
+    enabled: yes
+
+- name: Install kubectl via snap
+  community.general.snap:
+    name: kubectl
+    classic: yes
+    state: present
+
+- name: Install helm via snap
+  community.general.snap:
+    name: helm
+    classic: yes
+    state: present
+
+- name: Install eksctl
+  ansible.builtin.shell: |
+    set -e
+    ARCH=amd64
+    OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+    curl -sL "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_${OS}_${ARCH}.tar.gz" | tar xz -C /tmp
+    mv /tmp/eksctl /usr/local/bin/eksctl
+    chmod +x /usr/local/bin/eksctl
+  args:
+    creates: /usr/local/bin/eksctl

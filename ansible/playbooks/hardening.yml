@@ -1,0 +1,6 @@
+- name: Server hardening
+  hosts: mgmt_host:worker_nodes
+  become: yes
+  roles:
+    - security
+    - monitoring
