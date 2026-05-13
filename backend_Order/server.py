@@ -1,4 +1,14 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
+# Bổ sung
+import time
+from metrics import (
+    http_requests_total,
+    http_request_duration_seconds,
+    orders_total,
+    generate_latest,
+    CONTENT_TYPE_LATEST
+)
+# =====
 from pymongo import MongoClient
 
 import uuid
@@ -157,3 +167,41 @@ def delete_bill():
 
 if __name__ == "__main__":
     app.run(debug=True, port=3003)
+
+
+# =============================================================
+
+# Middleware tự động ghi metrics cho mọi request
+@app.before_request
+def start_timer():
+    request._start_time = time.time()
+
+@app.after_request
+def record_request_metrics(response):
+    duration = time.time() - request._start_time
+    endpoint = request.endpoint or request.path
+    http_requests_total.labels(
+        method=request.method,
+        endpoint=endpoint,
+        status_code=response.status_code
+    ).inc()
+    http_request_duration_seconds.labels(
+        method=request.method,
+        endpoint=endpoint
+    ).observe(duration)
+    return response
+
+# Endpoint /metrics cho Prometheus scrape
+@app.route('/metrics')
+def metrics():
+    return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
+
+# Ví dụ: ghi custom metric khi tạo đơn hàng
+@app.route('/orders', methods=['POST'])
+def create_order():
+    # ... business logic với MongoDB ...
+    orders_total.labels(status='created').inc()
+    return jsonify({'status': 'created'}), 201
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=3003)
