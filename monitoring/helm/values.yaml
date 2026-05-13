@@ -1,12 +1,40 @@
+# monitoring/helm/values.yaml
+
 grafana:
+  enabled: true
+
   adminPassword: "Nhom_DevOps_123!"
+
   persistence:
     enabled: false
 
 prometheus:
   prometheusSpec:
     retention: 15d
+
     storageSpec: {}
 
+    # Scrape thêm Node Exporter ngoài Kubernetes
+    additionalScrapeConfigs:
+      - job_name: "ansible-node-exporter"
+
+        static_configs:
+          - targets:
+              - "<EC2-IP-1>:9100"
+              - "<EC2-IP-2>:9100"
+
+        relabel_configs:
+          - source_labels: [__address__]
+            target_label: instance
+
+          - target_label: job
+            replacement: ansible-node-exporter
+
 alertmanager:
+  enabled: true
+
+nodeExporter:
+  enabled: true
+
+kubeStateMetrics:
   enabled: true
