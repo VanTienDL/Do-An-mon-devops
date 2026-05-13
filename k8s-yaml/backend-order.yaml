@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: order
-        image: catarena/backend-order:latest 
+        image: catarena/backend-order:latest
         ports:
         - containerPort: 3003
 ---
@@ -28,7 +28,7 @@ spec:
   selector:
     app: order
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 80
       targetPort: 3003
-
