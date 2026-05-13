@@ -1,0 +1,12 @@
+grafana:
+  adminPassword: "Nhom_DevOps_123!"
+  persistence:
+    enabled: false
+
+prometheus:
+  prometheusSpec:
+    retention: 15d
+    storageSpec: {}
+
+alertmanager:
+  enabled: true
