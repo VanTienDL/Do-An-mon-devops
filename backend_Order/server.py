@@ -1,8 +1,45 @@
 from flask import Flask, request, jsonify
 from pymongo import MongoClient
-
+import time
+from flask import Response, request
+from metrics import (
+    http_requests_total,
+    http_request_duration_seconds,
+    orders_total,
+    generate_latest,
+    CONTENT_TYPE_LATEST
+)
 import uuid
+
 app = Flask(__name__)
+
+@app.before_request
+def start_timer():
+    request._start_time = time.time()
+
+
+@app.after_request
+def record_request_metrics(response):
+    duration = time.time() - request._start_time
+    endpoint = request.endpoint or request.path
+
+    http_requests_total.labels(
+        method=request.method,
+        endpoint=endpoint,
+        status_code=response.status_code
+    ).inc()
+
+    http_request_duration_seconds.labels(
+        method=request.method,
+        endpoint=endpoint
+    ).observe(duration)
+
+    return response
+
+
+@app.route("/metrics")
+def metrics():
+    return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 # Kết nối Mongo
 client = MongoClient(
@@ -44,6 +81,7 @@ def create_order():
     }
 
     orders_collection.insert_one(order)
+    orders_total.labels(status="created").inc()
     
     return jsonify({
         "_id": order_id,
