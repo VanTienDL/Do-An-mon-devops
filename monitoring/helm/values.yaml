@@ -14,31 +14,18 @@ prometheus:
 
     storageSpec: {}
 
-    # Scrape thêm Node Exporter ngoài Kubernetes
-    additionalScrapeConfigs:
-      - job_name: "ansible-node-exporter"
-
-        static_configs:
-          - targets:
-              - "<EC2-IP-1>:9100" # cần thay IP thật
-              - "<EC2-IP-2>:9100" # cần thay IP thật
-
-        relabel_configs:
-          - source_labels: [__address__]
-            target_label: instance
-
-          - target_label: job
-            replacement: ansible-node-exporter
-
 alertmanager:
   enabled: true
+
+  alertmanagerSpec:
+    secrets:
+      - alertmanager-slack-secret
 
   config:
     global:
       resolve_timeout: 5m
 
-      # Slack Webhook URL
-      slack_api_url: "${SLACK_WEBHOOK_URL}" # "https://hooks.slack.com/services/XXX/YYY/ZZZ"
+      slack_api_url_file: /etc/alertmanager/secrets/alertmanager-slack-secret/SLACK_WEBHOOK_URL # "https://hooks.slack.com/services/XXX/YYY/ZZZ"
 
     route:
       group_by:

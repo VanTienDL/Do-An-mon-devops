@@ -2,8 +2,6 @@
 const client = require('prom-client');
 
 const register = new client.Registry();
-
-// Thu thập default metrics: CPU, memory, event loop lag của Node.js process
 client.collectDefaultMetrics({ register, prefix: 'user_service_' });
 
 const httpRequestDuration = new client.Histogram({

@@ -7,16 +7,16 @@ metadata:
   name: order-service-monitor
   namespace: monitoring
   labels:
-    release: monitoring       # Khớp với Helm release name ở Giai đoạn 2
+    release: monitoring
 spec:
   selector:
     matchLabels:
-      app: order              # Khớp với label trong k8s-yaml/backend-order.yaml
+      app: backend-order
   namespaceSelector:
     matchNames:
       - default
   endpoints:
-    - port: http              # Khớp với name: http đã thêm vào Service
+    - port: http
       path: /metrics
       interval: 15s
 ---
@@ -31,13 +31,13 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: product            # Khớp với label trong k8s-yaml/backend-product.yaml
+      app: backend-product
   namespaceSelector:
     matchNames:
       - default
   endpoints:
     - port: http
-      path: /actuator/prometheus    # Spring Boot Actuator endpoint
+      path: /actuator/prometheus
       interval: 15s
 ---
 # --- User Service (Node.js/Express) ---
@@ -51,7 +51,7 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: user               # Khớp với label trong k8s-yaml/backend-user.yaml
+      app: backend-user
   namespaceSelector:
     matchNames:
       - default
@@ -71,7 +71,7 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: gateway            # Khớp với label trong k8s-yaml/gateway.yaml (sau khi sửa lỗi)
+      app: api-gateway
   namespaceSelector:
     matchNames:
       - default
