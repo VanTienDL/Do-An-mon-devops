@@ -1,0 +1,58 @@
+{{- if .Values.frontend.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  labels:
+    {{ include "ecommerce.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  replicas: {{ .Values.frontend.replicaCount }}
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+        {{- with .Values.common.podLabels }}
+        {{ toYaml . | nindent 8 }}
+        {{- end }}
+      {{ with .Values.common.podAnnotations }}
+      annotations:
+        {{ toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ include "ecommerce.serviceAccountName" . }}
+      {{ with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{ toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: frontend
+          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.frontend.containerPort }}
+          env:
+            - name: VITE_API_BASE
+              value: {{ .Values.frontend.env.VITE_API_BASE | quote }}
+          resources:
+            {{ toYaml .Values.frontend.resources | nindent 12 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  labels:
+    {{ include "ecommerce.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  type: {{ .Values.frontend.service.type }}
+  selector:
+    app: frontend
+  ports:
+    - name: http
+      port: {{ .Values.frontend.service.port }}
+      targetPort: {{ .Values.frontend.service.targetPort }}
+{{- end }}

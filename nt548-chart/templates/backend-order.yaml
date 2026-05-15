@@ -5,7 +5,7 @@ metadata:
   labels:
     app: order
 spec:
-  replicas: 1
+  replicas: {{ .Values.backendOrder.replicaCount }}
   selector:
     matchLabels:
       app: order
@@ -16,19 +16,23 @@ spec:
     spec:
       containers:
       - name: order
-        image: catarena/backend-order:latest 
+        image: {{ .Values.backendOrder.image.repository }}:{{ .Values.backendOrder.image.tag }}
+        imagePullPolicy: {{ .Values.backendOrder.image.pullPolicy }}
         ports:
-        - containerPort: 3003
+        - containerPort: {{ .Values.backendOrder.containerPort }}
+        resources:
+          {{ toYaml .Values.backendOrder.resources | nindent 12 }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: order-service
 spec:
+  type: {{ .Values.backendOrder.service.type }}
   selector:
     app: order
   ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 3003
+    - name: http
+      port: {{ .Values.backendOrder.service.port }}
+      targetPort: {{ .Values.backendOrder.service.targetPort }}
 

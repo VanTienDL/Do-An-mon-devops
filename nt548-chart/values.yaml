@@ -1,0 +1,147 @@
+backendOrder:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: 041659741748.dkr.ecr.ap-southeast-1.amazonaws.com/ecommerce/backend-order
+    tag: latest
+    pullPolicy: IfNotPresent
+  containerPort: 3003
+  service:
+    type: ClusterIP
+    port: 3003
+    targetPort: 3003
+  env: {}
+  resources: {}
+
+backendProduct:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: 041659741748.dkr.ecr.ap-southeast-1.amazonaws.com/ecommerce/backend-product
+    tag: latest
+    pullPolicy: IfNotPresent
+  containerPort: 3002
+  service:
+    type: ClusterIP
+    port: 3002
+    targetPort: 3002
+  env: {}
+  resources: {}
+
+backendUser:
+  awsSecretName: ecommerce/backend-user
+  kubernetesSecretName: backend-user-secret
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: 041659741748.dkr.ecr.ap-southeast-1.amazonaws.com/ecommerce/backend-user
+    tag: latest
+    pullPolicy: IfNotPresent
+  containerPort: 3001
+  service:
+    type: ClusterIP
+    port: 3001
+    targetPort: 3001
+  env:
+    PORT: "3001"
+    DB_HOST: "<YOUR_RDS_ENDPOINT>"
+    DB_PORT: "5432"
+    DB_NAME: "userdb"
+    DB_USER: "postgres"
+  secrets:
+    DB_PASSWORD: "<YOUR_RDS_PASSWORD>"
+  resources: {}
+
+gateway:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: 041659741748.dkr.ecr.ap-southeast-1.amazonaws.com/ecommerce/gateway
+    tag: latest
+    pullPolicy: IfNotPresent
+  containerPort: 3000
+  service:
+    type: ClusterIP
+    port: 3000
+    targetPort: 3000
+  corsOrigins:
+    - "http://localhost:5173"
+    - "http://127.0.0.1:5500"
+    - "http://localhost:5500"
+  routes:
+    user: "http://backend-user:3001"
+    products: "http://backend-product:3002"
+    purchase: "http://backend-order:3003"
+  resources: {}
+
+frontend:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: 041659741748.dkr.ecr.ap-southeast-1.amazonaws.com/ecommerce/frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  containerPort: 80
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 80
+  env:
+    VITE_API_BASE: "/api"
+  resources: {}
+
+ingress:
+  enabled: true
+  className: "alb"
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+  hosts:
+    - host: ""
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: gateway-service
+          port: 3000
+        - path: /
+          pathType: Prefix
+          service: frontend
+          port: 80
+  tls: []
+
+postgres:
+  enabled: false
+  awsSecretName: ecommerce/postgres
+  kubernetesSecretName: postgres-secret
+  replicaCount: 1
+  image:
+    repository: postgres
+    tag: "16"
+    pullPolicy: IfNotPresent
+  containerPort: 5432
+  service:
+    type: ClusterIP
+    port: 5432
+    targetPort: 5432
+  storage:
+    enabled: true
+    size: 5Gi
+    accessModes:
+      - ReadWriteOnce
+  env:
+    POSTGRES_USER: postgres
+    POSTGRES_DB: userdb
+  resources: {}
+
+serviceAccount:
+  create: false
+  name: ""
+
+aws:
+  region: ap-southeast-1
+
+common:
+  podLabels: {}
+  podAnnotations: {}
+
+imagePullSecrets: []

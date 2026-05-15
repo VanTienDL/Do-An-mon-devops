@@ -1,0 +1,16 @@
+{{- if .Values.gateway.enabled}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-routes
+  labels:
+    {{ include "ecommerce.labels" . | nindent 4 }}
+data:
+  route.config.js: |
+    module.exports = {
+        "/api/user": "{{ .Values.gateway.routes.user }}",
+        "/api/products": "{{ .Values.gateway.routes.products }}",
+        "/api/purchase": "{{ .Values.gateway.routes.purchase }}"
+    };
+
+  {{- end}}

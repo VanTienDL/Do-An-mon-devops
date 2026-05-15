@@ -9,6 +9,6 @@ app.use(express.json());
 
 app.use('/api/user', userRoutes);
 
-app.listen(process.env.PORT || 3001, () => {
+app.listen(process.env.PORT || 3001, '0.0.0.0', () => {
   console.log(`Server running on port ${process.env.PORT || 3001}`);
 });

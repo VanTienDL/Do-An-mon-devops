@@ -1,0 +1,73 @@
+{{- if .Values.postgres.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  labels:
+    {{ include "ecommerce.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgres
+spec:
+  serviceName: postgres
+  replicas: {{ .Values.postgres.replicaCount }}
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+        {{- with .Values.common.podLabels }}
+        {{ toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.common.podAnnotations }}
+      annotations:
+        {{ toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      containers:
+        - name: postgres
+          image: "{{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag }}"
+          imagePullPolicy: {{ .Values.postgres.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.postgres.containerPort }}
+          env:
+            - name: POSTGRES_USER
+              value: {{ .Values.postgres.env.POSTGRES_USER | quote }}
+            - name: POSTGRES_DB
+              value: {{ .Values.postgres.env.POSTGRES_DB | quote }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: backend-user-secret
+                  key: DB_PASSWORD
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+          resources:
+            {{ toYaml .Values.postgres.resources | nindent 12 }}
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes:
+          {{ toYaml .Values.postgres.storage.accessModes | nindent 10 }}
+        resources:
+          requests:
+            storage: {{ .Values.postgres.storage.size }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    {{ include "ecommerce.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgres
+spec:
+  type: {{ .Values.postgres.service.type }}
+  selector:
+    app: postgres
+  ports:
+    - name: postgres
+      port: {{ .Values.postgres.service.port }}
+      targetPort: {{ .Values.postgres.service.targetPort }}
+{{- end }}

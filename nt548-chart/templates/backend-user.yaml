@@ -16,18 +16,20 @@ spec:
     spec:
       containers:
       - name: user
-        image: catarena/backend-user:latest 
+        image: "{{ .Values.backendUser.image.repository }}:{{ .Values.backendUser.image.tag }}"
         ports:
-        - containerPort: 3001
+        - containerPort: {{ .Values.backendUser.containerPort }}
 ---
 apiVersion: v1
 kind: Service
+
 metadata:
   name: user-service
 spec:
+  type: {{ .Values.backendUser.service.type }}
   selector:
     app: user
   ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 3001
+    - name: http
+      port: {{ .Values.backendUser.service.port }}
+      targetPort: {{ .Values.backendUser.service.targetPort }}

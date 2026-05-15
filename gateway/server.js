@@ -10,7 +10,7 @@ const app = express();
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ["http://localhost:5173" ,"http://127.0.0.1:5500", "http://localhost:5500"],
+    origin: "*",
     credentials: true,
   })
 );
@@ -109,6 +109,6 @@ app.get("/", (req, res) => res.send("🌐 API Gateway đang hoạt động! 🚀
 
 // ================== START ==================
 const PORT = process.env.GATEWAY_PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚪 Gateway chạy ở http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚪 Gateway chạy ở http://0.0.0.0:${PORT}`);
 });
