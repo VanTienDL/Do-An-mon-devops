@@ -1,0 +1,9 @@
+---
+# Override these values with the EKS cluster created by Terraform.
+aws_region: ap-southeast-1
+eks_cluster_name: iac-dev-eks
+node_exporter_version: "1.8.2"
+
+# kubeconfig will be created for the SSH user on the management host.
+kubeconfig_path: "{{ ansible_env.HOME }}/.kube/config"
+kubeconfig_context_alias: "{{ eks_cluster_name }}"

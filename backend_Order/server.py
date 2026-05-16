@@ -13,6 +13,34 @@ from metrics import (
 
 app = Flask(__name__)
 
+@app.before_request
+def start_timer():
+    request._start_time = time.time()
+
+
+@app.after_request
+def record_request_metrics(response):
+    duration = time.time() - request._start_time
+    endpoint = request.endpoint or request.path
+
+    http_requests_total.labels(
+        method=request.method,
+        endpoint=endpoint,
+        status_code=response.status_code
+    ).inc()
+
+    http_request_duration_seconds.labels(
+        method=request.method,
+        endpoint=endpoint
+    ).observe(duration)
+
+    return response
+
+
+@app.route("/metrics")
+def metrics():
+    return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
+
 # ================== MONGODB ==================
 client = MongoClient(
     "mongodb+srv://23521581_db_user:atlas23521581@secondcluster.zdf5ent.mongodb.net/Purchase?retryWrites=true&w=majority"
