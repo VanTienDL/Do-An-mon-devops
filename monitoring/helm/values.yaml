@@ -7,6 +7,13 @@ prometheus:
   prometheusSpec:
     retention: 15d
     storageSpec: {}
+    additionalScrapeConfigs:
+      - job_name: ansible-node-exporter
+        static_configs:
+          - targets:
+              - "10.0.3.233:9100"
+            labels:
+              instance: "bastion"
 
 alertmanager:
   enabled: true
