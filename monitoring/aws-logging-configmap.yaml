@@ -1,0 +1,25 @@
+# monitoring/aws-logging-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aws-logging
+  namespace: aws-observability
+data:
+  flb_log_cw: "true"
+  filters.conf: |
+    [FILTER]
+        Name                kubernetes
+        Match               kube.*
+        Merge_Log           On
+        Keep_Log            Off
+        K8S-Logging.Parser  On
+        K8S-Logging.Exclude On
+  output.conf: |
+    [OUTPUT]
+        Name                cloudwatch_logs
+        Match               kube.*
+        region              ap-southeast-1
+        log_group_name      /aws/eks/<tên-cluster>/application
+        log_stream_prefix   from-fluent-bit-
+        log_retention_days  30
+        auto_create_group   true
