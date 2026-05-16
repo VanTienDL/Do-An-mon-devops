@@ -5,16 +5,17 @@ metadata:
   name: microservices-alerts
   namespace: monitoring
   labels:
-    release: monitoring       # Phải khớp với Helm release name
+    release: monitoring
 spec:
   groups:
 
-    # --- Nhóm 1: Availability của 4 services ---
+    # --- Nhóm 1: Availability ---
     - name: microservices.availability
       rules:
 
         - alert: ServiceDown
-          expr: up{job=~"order-service|product-service|user-service|gateway-service"} == 0
+          expr: |
+            up{job=~"backend-order|backend-product|backend-user|api-gateway"} == 0
           for: 1m
           labels:
             severity: critical
@@ -22,7 +23,7 @@ spec:
             summary: "Service {{ $labels.job }} bị DOWN"
             description: >
               Service {{ $labels.job }} mất kết nối hơn 1 phút.
-              Kiểm tra pod: kubectl get pods -n default | grep {{ $labels.job }}
+              Kiểm tra: kubectl get pods -n default | grep {{ $labels.job }}
 
         - alert: HighErrorRate
           expr: |
@@ -35,9 +36,7 @@ spec:
             severity: warning
           annotations:
             summary: "Error rate cao trên {{ $labels.job }}"
-            description: >
-              Error rate (5xx) của {{ $labels.job }} vượt 5%
-              trong 2 phút liên tiếp.
+            description: "Error rate (5xx) vượt 5% trong 2 phút."
 
         - alert: GatewayHighErrorRate
           expr: |
@@ -50,23 +49,19 @@ spec:
             severity: warning
           annotations:
             summary: "Gateway error rate cao khi proxy đến {{ $labels.target_service }}"
-            description: >
-              Gateway đang gặp > 5% lỗi khi proxy đến {{ $labels.target_service }}.
+            description: "Gateway gặp > 5% lỗi khi proxy."
 
         - alert: HighP95Latency
           expr: |
             histogram_quantile(0.95,
-              sum(rate(http_request_duration_seconds_bucket[5m]))
-              by (le, job)
+              sum(rate(http_request_duration_seconds_bucket[5m])) by (le, job)
             ) > 1
           for: 3m
           labels:
             severity: warning
           annotations:
-            summary: "Latency P95 cao trên {{ $labels.job }}"
-            description: >
-              P95 latency của {{ $labels.job }} vượt 1 giây
-              trong 3 phút liên tiếp.
+            summary: "Latency P95 > 1s trên {{ $labels.job }}"
+            description: "P95 latency vượt 1 giây trong 3 phút."
 
         - alert: GatewayProxyErrors
           expr: rate(gateway_proxy_errors_total[5m]) > 0
@@ -74,54 +69,75 @@ spec:
           labels:
             severity: warning
           annotations:
-            summary: "Gateway đang có proxy errors đến {{ $labels.target_service }}"
-            description: >
-              Phát hiện proxy error liên tục từ Gateway đến {{ $labels.target_service }}.
+            summary: "Gateway proxy errors đến {{ $labels.target_service }}"
+            description: "Phát hiện proxy error liên tục từ Gateway."
 
-    # --- Nhóm 2: Tài nguyên Kubernetes ---
+    # --- Nhóm 2: Kubernetes Resources ---
     - name: kubernetes.resources
       rules:
 
         - alert: PodCrashLooping
-          expr: increase(kube_pod_container_status_restarts_total{namespace="default"}[15m]) > 3
+          expr: |
+            increase(kube_pod_container_status_restarts_total{
+              namespace="default",
+              pod=~"backend-order.*|backend-product.*|backend-user.*|api-gateway.*"
+            }[15m]) > 3
           for: 0m
           labels:
             severity: critical
           annotations:
             summary: "Pod {{ $labels.pod }} đang crash loop"
             description: >
-              Pod {{ $labels.pod }} đã restart hơn 3 lần trong 15 phút.
-              Kiểm tra logs: kubectl logs {{ $labels.pod }} -n default --previous
-
-        - alert: HighMemoryUsage
-          expr: |
-            container_memory_working_set_bytes{namespace="default", container!=""}
-            /
-            container_spec_memory_limit_bytes{namespace="default", container!=""}
-            * 100 > 85
-          for: 5m
-          labels:
-            severity: warning
-          annotations:
-            summary: "{{ $labels.pod }} sử dụng memory > 85%"
-            description: >
-              Container {{ $labels.container }} trong pod {{ $labels.pod }}
-              đang dùng hơn 85% memory limit trong 5 phút.
+              Pod restart hơn 3 lần trong 15 phút.
+              Kiểm tra: kubectl logs {{ $labels.pod }} -n default --previous
 
         - alert: PodNotReady
           expr: |
-            kube_pod_status_ready{namespace="default", condition="true"} == 0
+            kube_pod_status_ready{
+              namespace="default",
+              condition="true",
+              pod=~"backend-order.*|backend-product.*|backend-user.*|api-gateway.*"
+            } == 0
           for: 2m
           labels:
             severity: critical
           annotations:
             summary: "Pod {{ $labels.pod }} không ở trạng thái Ready"
-            description: >
-              Pod {{ $labels.pod }} không Ready trong hơn 2 phút.
+            description: "Pod không Ready trong hơn 2 phút."
 
-    # --- Nhóm 3: EC2 nodes (Ansible node_exporter) ---
+        - alert: HighMemoryUsage
+          expr: |
+            container_memory_working_set_bytes{
+              namespace="default",
+              container!="",
+              pod=~"backend-order.*|backend-product.*|backend-user.*|api-gateway.*"
+            }
+            /
+            container_spec_memory_limit_bytes{
+              namespace="default",
+              container!="",
+              pod=~"backend-order.*|backend-product.*|backend-user.*|api-gateway.*"
+            }
+            * 100 > 85
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "{{ $labels.pod }} dùng memory > 85%"
+            description: "Container {{ $labels.container }} dùng > 85% memory limit."
+
+    # --- Nhóm 3: EC2 Ansible nodes ---
     - name: ansible.nodes
       rules:
+
+        - alert: AnsibleNodeDown
+          expr: up{job="ansible-node-exporter"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "EC2 node {{ $labels.instance }} không phản hồi"
+            description: "Node_exporter trên {{ $labels.instance }} mất kết nối > 2 phút."
 
         - alert: AnsibleNodeHighCPU
           expr: |
@@ -132,18 +148,5 @@ spec:
           labels:
             severity: warning
           annotations:
-            summary: "EC2 node {{ $labels.instance }} CPU > 80%"
-            description: >
-              Node {{ $labels.instance }} đang dùng hơn 80% CPU
-              trong 5 phút. Kiểm tra tiến trình đang chạy trên node.
-
-        - alert: AnsibleNodeDown
-          expr: up{job="ansible-node-exporter"} == 0
-          for: 2m
-          labels:
-            severity: critical
-          annotations:
-            summary: "EC2 node {{ $labels.instance }} không phản hồi"
-            description: >
-              Node_exporter trên {{ $labels.instance }} không phản hồi
-              hơn 2 phút. Node có thể đã bị tắt hoặc mất kết nối.
+            summary: "EC2 {{ $labels.instance }} CPU > 80%"
+            description: "CPU vượt 80% trong 5 phút."
