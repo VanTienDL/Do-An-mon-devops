@@ -1,6 +1,7 @@
-- name: Server hardening
-  hosts: mgmt_host:worker_nodes
-  become: yes
+---
+- name: Harden management host
+  hosts: mgmt_host
+  become: true
   roles:
     - security
     - monitoring
